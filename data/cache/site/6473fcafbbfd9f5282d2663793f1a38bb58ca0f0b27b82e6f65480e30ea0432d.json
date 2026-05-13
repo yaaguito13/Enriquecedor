@@ -1,0 +1,12 @@
+{
+  "created_at": 1778693109.7251022,
+  "value": [
+    {
+      "value": "theresa.frey@visable.com",
+      "kind": "email",
+      "source_url": "https://www.bme.de/services/siegel/anbietersuche-europages",
+      "score": 0.45255102040816325,
+      "reason": "Email detectado en web candidata"
+    }
+  ]
+}

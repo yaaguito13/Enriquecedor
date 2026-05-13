@@ -1,0 +1,12 @@
+{
+  "created_at": 1778693097.345149,
+  "value": [
+    {
+      "value": "help@flickr.com",
+      "kind": "email",
+      "source_url": "https://www.flickr.com/help/legal/",
+      "score": 0.7023809523809523,
+      "reason": "Email detectado en web candidata"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "created_at": 1778693100.099963,
+  "value": [
+    {
+      "value": "legal@issuu.com",
+      "kind": "email",
+      "source_url": "https://issuu.com/legal/terms",
+      "score": 0.5020661157024793,
+      "reason": "Email detectado en web candidata"
+    },
+    {
+      "value": "commercial@namadr.com",
+      "kind": "email",
+      "source_url": "https://issuu.com/legal/terms",
+      "score": 0.45206611570247934,
+      "reason": "Email detectado en web candidata"
+    }
+  ]
+}

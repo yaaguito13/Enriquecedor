@@ -1,0 +1,12 @@
+{
+  "created_at": 1778693104.3393931,
+  "value": [
+    {
+      "value": "clientes@einforma.com",
+      "kind": "email",
+      "source_url": "https://www.einforma.com",
+      "score": 0.9591743119266054,
+      "reason": "Email detectado en web candidata"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "created_at": 1778693109.812602,
+  "value": [
+    {
+      "value": "recruiting@visable.com",
+      "kind": "email",
+      "source_url": "https://www.visable.com/en_nl/contact-us",
+      "score": 0.7120192307692307,
+      "reason": "Email detectado en web candidata"
+    },
+    {
+      "value": "recruiting-france@visable.com",
+      "kind": "email",
+      "source_url": "https://www.visable.com/fr_fr/contact",
+      "score": 0.71010101010101,
+      "reason": "Email detectado en web candidata"
+    },
+    {
+      "value": "customercare@europages.com",
+      "kind": "email",
+      "source_url": "https://www.visable.com/en_nl/contact-us",
+      "score": 0.4620192307692308,
+      "reason": "Email detectado en web candidata"
+    }
+  ]
+}

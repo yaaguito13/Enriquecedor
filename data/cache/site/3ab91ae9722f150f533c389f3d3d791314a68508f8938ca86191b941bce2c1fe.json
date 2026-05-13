@@ -1,0 +1,19 @@
+{
+  "created_at": 1778693121.293887,
+  "value": [
+    {
+      "value": "admin@onlymediaweb.com",
+      "kind": "email",
+      "source_url": "http://www.onlymediaweb.com/contacto-only-media-web/",
+      "score": 0.7068181818181818,
+      "reason": "Email detectado en web candidata"
+    },
+    {
+      "value": "onlymediaweb@onlymediaweb.com",
+      "kind": "email",
+      "source_url": "https://www.onlymediaweb.com/aviso-legal-y-politica-de-cookies/",
+      "score": 0.7062499999999999,
+      "reason": "Email detectado en web candidata"
+    }
+  ]
+}

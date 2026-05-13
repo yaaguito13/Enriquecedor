@@ -1,0 +1,12 @@
+{
+  "created_at": 1778693101.063238,
+  "value": [
+    {
+      "value": "account-withdrawal@google.com",
+      "kind": "email",
+      "source_url": "https://policies.google.com/terms",
+      "score": 0.7032051282051281,
+      "reason": "Email detectado en web candidata"
+    }
+  ]
+}

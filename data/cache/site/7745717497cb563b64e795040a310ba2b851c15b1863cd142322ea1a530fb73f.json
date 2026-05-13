@@ -1,0 +1,12 @@
+{
+  "created_at": 1778693105.199865,
+  "value": [
+    {
+      "value": "administrator@visable.com",
+      "kind": "email",
+      "source_url": "https://apps.apple.com/es/app/europages-plataforma-b2b/id6459474480",
+      "score": 0.4523809523809524,
+      "reason": "Email detectado en web candidata"
+    }
+  ]
+}
