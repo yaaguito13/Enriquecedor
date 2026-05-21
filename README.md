@@ -28,10 +28,11 @@ Agente de scraping empresarial por sector con interfaz web. Busca empresas en di
 - **11 sectores** predefinidos: Tecnología, Marketing, Diseño, Construcción, Salud, Legal, Educación, Restauración, Inmobiliaria, Industria y Otros
 - **Campo de palabras clave** para afinar la búsqueda (ciudad, tipo de empresa, etc.)
 - **Progreso en tiempo real** vía Server-Sent Events — contadores de fuentes, empresas, emails y teléfonos actualizándose en directo
-- **Filtros de calidad** — lista negra de 70+ dominios (LinkedIn, Twitter, YouTube, Flickr, App Store, Europages…) para devolver solo empresas reales
-- **Enriquecimiento de ficheros** — sube un CSV o Excel con datos incompletos y el agente rellena los huecos
+- **Filtros de calidad** — lista negra de 70+ dominios y filtrado heurístico de contenido para devolver solo empresas reales
+- **Enriquecimiento de ficheros** — sube un CSV o Excel con datos incompletos y el agente rellena los huecos usando IA
 - **Detección automática de columnas** en el fichero subido (soporta nombres en español e inglés)
 - **Exportación** a Excel `.xlsx` (con hipervínculos y celdas nuevas resaltadas en verde) y `.csv`
+- **Pestaña de Documentación Técnica** integrada directamente en la aplicación web para facilitar la revisión y entendimiento del proyecto.
 - **Botón de parada** — detiene el agente limpiamente en cualquier momento conservando los datos ya recogidos
 - **Modo Demo** — prueba la interfaz sin hacer peticiones reales a internet
 
@@ -211,37 +212,31 @@ app.py  (Flask)
                └── Exportación con celdas resaltadas
 ```
 
-### Flujo del agente de búsqueda
+### Flujo del agente de búsqueda (Optimizado)
 
 ```
 Sector seleccionado
        │
        ▼
-Genera 5 queries específicas para ese sector
+Genera 5 queries avanzadas ("prompts") específicas para ese sector
        │
        ▼
-Busca cada query en DuckDuckGo HTML
+Busca cada query en DuckDuckGo apuntando a webs corporativas
        │
        ▼
-Filtra URLs (descarta dominios bloqueados)
+Obtiene hasta 150 URLs potenciales
        │
        ▼
-Visita cada directorio encontrado
+Inicia ThreadPoolExecutor (Multithreading - 8 hilos concurrentes)
+       │
+       ├── Filtra URLs (descarta dominios bloqueados)
+       ├── Visita la web de la empresa en paralelo
+       ├── Filtro heurístico: verifica que el texto contiene palabras del sector
+       ├── Si pasa el filtro: extrae nombre, emails y teléfonos con RegEx
+       └── Si faltan datos → busca página de contacto internamente
        │
        ▼
-Extrae links a empresas individuales
-(1 link por dominio, descarta paths de login/legal/etc.)
-       │
-       ▼
-Visita cada web de empresa
-       │
-       ├── Extrae nombre (og:site_name → title → h1 → dominio)
-       ├── Extrae emails con regex
-       ├── Extrae teléfonos españoles con regex
-       └── Si faltan datos → busca página de contacto
-       │
-       ▼
-Deduplica por dominio
+Sincronización segura de hilos (threading.RLock) para deduplicar
        │
        ▼
 Emite evento SSE al navegador
@@ -397,11 +392,10 @@ Los campos `null` se guardan como cadena vacía en el CSV y como celda vacía en
 
 ## Limitaciones conocidas
 
-- **DuckDuckGo puede tardar**: Aunque en la versión 1.1 se usa la librería `ddgs` para evitar bloqueos antibots, procesar archivos masivos sin web (ej. 4.000 filas) puede demorar horas. Se recomienda segmentar los excels muy grandes.
+- **DuckDuckGo puede tardar**: Aunque en la versión 1.1 se usa la librería `ddgs` para evitar bloqueos antibots, procesar archivos masivos sin web (ej. 4.000 filas) puede demorar. Se recomienda segmentar los excels muy grandes.
 - **Optimizado para PYMES/SLs**: Las grandes corporaciones (ej. S.A.) suelen esconder sus datos en portales de ayuda o carecer de correos públicos generales, por lo que la tasa de éxito con ellas es más baja.
 - **Máximo 2 contactos**: Solo extrae un máximo de 2 emails y 2 teléfonos por empresa para evitar "alucinaciones" (como atrapar números de fax o registros mercantiles por error).
-- **Algunos directorios requieren JavaScript** para mostrar el listado de empresas. El scraper solo procesa HTML estático, por lo que esos directorios devuelven pocas o ninguna empresa.
-- **La calidad depende de los directorios públicos** disponibles en el momento de la búsqueda. Para sectores muy locales o nichos pequeños puede haber menos resultados.
+- **La calidad depende de los buscadores públicos** disponibles en el momento de la búsqueda. Para sectores muy locales o nichos pequeños puede haber menos resultados.
 
 ---
 
