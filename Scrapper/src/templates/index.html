@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EmpresaScout — Scraping Empresarial por Sector</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+
+<link href="/static/css/style.css" rel="stylesheet"/></head>
+<body>
+<header>
+<div class="container">
+<div class="header-inner">
+<div class="logo">
+<div class="logo-icon">
+<svg fill="none" stroke="#22C55E" stroke-width="1.8" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+<path d="M11 8v6M8 11h6"></path>
+</svg>
+</div>
+<span class="logo-text">Empresa<span>Scout</span></span>
+</div>
+<span class="header-badge">SCRAPING AGENT v1.1</span>
+</div>
+</div>
+</header>
+<main>
+<div class="container">
+<!-- Tabs -->
+<div class="tabs">
+<button class="tab-btn active" id="tabScrape" onclick="switchTab('scrape')">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+</svg>
+        Búsqueda nueva
+      </button>
+<button class="tab-btn" id="tabEnrich" onclick="switchTab('enrich')">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+<line x1="12" x2="12" y1="18" y2="12"></line>
+<line x1="9" x2="15" y1="15" y2="15"></line>
+</svg>
+        Enriquecer fichero
+      </button>
+</div>
+<!-- ══ TAB: Búsqueda nueva ══ -->
+<div class="tab-panel active" id="panelScrape">
+<div class="control-panel">
+<div class="panel-title">Configuración del agente</div>
+<div class="form-grid">
+<div class="field">
+<label>Sector empresarial</label>
+<select id="sectorSelect">
+            {% for s in sectors %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+          </select>
+</div>
+<div class="field">
+<label>Palabras clave <span style="color:var(--text3)">(opcional)</span></label>
+<input id="keywords" placeholder="ej: Barcelona, B2B, PYME…" type="text"/>
+</div>
+<div class="btn-group">
+<button class="btn btn-demo" id="btnDemo" onclick="startScrape(true)">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+<path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+</svg>
+            Demo
+          </button>
+<button class="btn btn-primary" id="btnStart" onclick="startScrape(false)">
+<span class="btn-icon">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<polygon points="5 3 19 12 5 21 5 3"></polygon>
+</svg>
+</span>
+<div class="spinner"></div>
+            Iniciar
+          </button>
+<button class="btn btn-stop" disabled="" id="btnStop" onclick="stopScrape()">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="18" rx="2" width="18" x="3" y="3"></rect>
+</svg>
+            Parar
+          </button>
+</div>
+</div>
+</div>
+<!-- Stats Bar -->
+<div class="stats-bar">
+<div class="stat-card" id="statFuentes">
+<div class="stat-label">Fuentes</div>
+<div class="stat-value" id="valFuentes">0</div>
+</div>
+<div class="stat-card" id="statEmpresas">
+<div class="stat-label">Empresas</div>
+<div class="stat-value" id="valEmpresas">0</div>
+</div>
+<div class="stat-card" id="statEmails">
+<div class="stat-label">Emails</div>
+<div class="stat-value" id="valEmails">0</div>
+</div>
+<div class="stat-card" id="statTelefonos">
+<div class="stat-label">Teléfonos</div>
+<div class="stat-value" id="valTelefonos">0</div>
+</div>
+</div>
+<!-- Status Log -->
+<div class="status-section">
+<div class="status-header">
+<span class="section-label">// log del agente</span>
+<span class="phase-badge" id="phaseBadge">—</span>
+</div>
+<div class="log-box" id="logBox">
+<span style="color:var(--text3)">Listo. Selecciona sector e inicia el agente.</span>
+</div>
+</div>
+<!-- Progress -->
+<div class="progress-wrap">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<!-- Results -->
+<div class="results-header">
+<div class="results-title">
+<h2>Resultados</h2>
+<span class="results-count" id="resultsCount">0 empresas encontradas</span>
+</div>
+<div class="export-buttons">
+<button class="btn btn-secondary" disabled="" id="btnXlsx" onclick="exportData('xlsx')">
+<svg fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+<line x1="16" x2="8" y1="13" y2="13"></line>
+<line x1="16" x2="8" y1="17" y2="17"></line>
+<polyline points="10 9 9 9 8 9"></polyline>
+</svg>
+          Excel
+        </button>
+<button class="btn btn-secondary" disabled="" id="btnCsv" onclick="exportData('csv')">
+<svg fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+<line x1="12" x2="12" y1="18" y2="12"></line>
+<line x1="9" x2="15" y1="15" y2="15"></line>
+</svg>
+          CSV
+        </button>
+</div>
+</div>
+<div class="table-wrap">
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Empresa</th>
+<th>Sector</th>
+<th>Web</th>
+<th>Email</th>
+<th>Teléfono</th>
+<th>Fuente</th>
+</tr>
+</thead>
+<tbody id="tableBody">
+<tr>
+<td colspan="7">
+<div class="empty-state">
+<div class="empty-icon">📡</div>
+<div class="empty-title">Sin datos todavía</div>
+<div class="empty-sub">Inicia el agente o usa el modo Demo para ver resultados</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div><!-- /panelScrape -->
+<!-- ══ TAB: Enriquecer fichero ══ -->
+<div class="tab-panel" id="panelEnrich">
+<div class="control-panel">
+<div class="panel-title">Subir fichero para enriquecer</div>
+<div class="drop-zone" id="dropZone">
+<input accept=".csv,.xlsx,.xls,.xlsm,.tsv" id="fileInput" onchange="onFileSelected(this.files[0])" type="file"/>
+<span class="drop-icon">📄</span>
+<div class="drop-title">Arrastra tu fichero aquí o haz clic para seleccionarlo</div>
+<div class="drop-sub">El agente detectará las columnas automáticamente y rellenará los huecos vacíos de email y teléfono</div>
+<div class="drop-formats">
+<span class="format-badge">.CSV</span>
+<span class="format-badge">.XLSX</span>
+<span class="format-badge">.XLS</span>
+<span class="format-badge">.TSV</span>
+</div>
+</div>
+<div class="file-chip" id="fileChip">
+<svg fill="none" height="16" stroke="var(--green)" stroke-width="2" viewbox="0 0 24 24" width="16">
+<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+</svg>
+<span class="file-chip-name" id="chipName">—</span>
+<span class="file-chip-size" id="chipSize"></span>
+<button class="file-chip-remove" onclick="clearFile()" title="Quitar fichero">
+<svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14">
+<line x1="18" x2="6" y1="6" y2="18"></line><line x1="6" x2="18" y1="6" y2="18"></line>
+</svg>
+</button>
+</div>
+<div id="colDetect" style="display:none; margin-top:14px; padding:10px 14px;
+           background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius);
+           font-family:var(--font-mono); font-size:.71rem; color:var(--text3); line-height:2;">
+</div>
+<!-- AI status -->
+<div id="aiStatusBar" style="margin-top:14px; padding:10px 14px; border-radius:var(--radius);
+           font-family:var(--font-mono); font-size:.72rem; display:none;
+           border:1px solid; line-height:1.6;">
+</div>
+<!-- API Key input (se muestra si no hay key) -->
+<div id="apiKeySection" style="display:none; margin-top:12px;">
+<div style="font-family:var(--font-mono);font-size:.68rem;color:var(--text3);margin-bottom:6px;">
+          🔑 ANTHROPIC_API_KEY — pégala aquí para activar el modo IA (no se guarda en disco)
+        </div>
+<div style="display:flex;gap:8px;align-items:center;">
+<input id="apiKeyInput" oninput="onApiKeyChange(this.value)" placeholder="sk-ant-api03-..." style="flex:1;background:var(--bg3);border:1px solid var(--border2);
+                   border-radius:var(--radius);color:var(--text);font-family:var(--font-mono);
+                   font-size:.78rem;padding:8px 12px;outline:none;" type="password"/>
+<button class="btn btn-secondary" disabled="" id="btnApplyKey" onclick="applyApiKey()">
+            Activar
+          </button>
+</div>
+</div>
+<div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+<button class="btn btn-primary" disabled="" id="btnEnrich" onclick="startEnrich()">
+<span class="btn-icon">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+</svg>
+</span>
+<div class="spinner"></div>
+          Enriquecer
+        </button>
+<button class="btn btn-stop" disabled="" id="btnEnrichStop" onclick="stopEnrich()">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<rect height="18" rx="2" width="18" x="3" y="3"></rect>
+</svg>
+          Parar
+        </button>
+<span id="enrichHint" style="font-family:var(--font-mono);font-size:.68rem;color:var(--text3)">
+          Selecciona un fichero para continuar
+        </span>
+</div>
+</div>
+<!-- Stats enriquecimiento -->
+<div class="enrich-summary" id="enrichSummary">
+<div class="stat-card"><div class="stat-label">Total filas</div><div class="stat-value" id="eValTotal">0</div></div>
+<div class="stat-card"><div class="stat-label">Enriquecidas</div><div class="stat-value" id="eValEnriched" style="color:var(--green)">0</div></div>
+<div class="stat-card"><div class="stat-label">Emails</div><div class="stat-value" id="eValEmails">0</div></div>
+<div class="stat-card"><div class="stat-label">Teléfonos</div><div class="stat-value" id="eValTels">0</div></div>
+</div>
+<!-- Log -->
+<div class="status-section" id="enrichLogSection" style="display:none">
+<div class="status-header">
+<span class="section-label">// log de enriquecimiento</span>
+<span class="phase-badge" id="enrichPhaseBadge"></span>
+</div>
+<div class="log-box" id="enrichLogBox"></div>
+</div>
+<div class="progress-wrap" id="enrichProgressWrap" style="display:none">
+<div class="progress-bar" id="enrichProgressBar"></div>
+</div>
+<!-- Tabla resultados -->
+<div id="enrichResultsWrap" style="display:none">
+<div class="results-header">
+<div class="results-title">
+<h2>Resultado enriquecido</h2>
+<span class="results-count" id="enrichCount">0 filas</span>
+</div>
+<div class="export-buttons">
+<button class="btn btn-secondary" disabled="" id="btnEnrichXlsx" onclick="exportEnrich('xlsx')">
+<svg fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+<line x1="16" x2="8" y1="13" y2="13"></line>
+</svg>
+            Excel
+          </button>
+<button class="btn btn-secondary" disabled="" id="btnEnrichCsv" onclick="exportEnrich('csv')">
+<svg fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+<line x1="12" x2="12" y1="18" y2="12"></line>
+</svg>
+            CSV
+          </button>
+</div>
+</div>
+<div style="font-family:var(--font-mono);font-size:.68rem;color:var(--green);
+                  margin-bottom:10px; padding:6px 12px; background:rgba(34,197,94,.07);
+                  border:1px solid rgba(34,197,94,.2); border-radius:6px; display:inline-block">
+        🟢 Celdas resaltadas = datos añadidos por el agente
+      </div>
+<div class="table-wrap">
+<div class="table-scroll">
+<table>
+<thead>
+<tr><th>#</th><th>Empresa</th><th>Sector</th><th>Web</th>
+<th>Email</th><th>Teléfono</th><th>Fuente</th></tr>
+</thead>
+<tbody id="enrichTableBody">
+<tr><td colspan="7">
+<div class="empty-state">
+<div class="empty-icon">📋</div>
+<div class="empty-title">Sube un fichero para empezar</div>
+<div class="empty-sub">Acepta CSV y Excel con cualquier estructura de columnas</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div><!-- /panelEnrich -->
+</div><!-- /container -->
+</main>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="/static/js/app.js"></script></body>
+</html>
