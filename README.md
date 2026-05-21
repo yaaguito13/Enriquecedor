@@ -1,4 +1,4 @@
-# EmpresaScout 🔍
+# EmpresaScout v1.1 🔍
 
 Agente de scraping empresarial por sector con interfaz web. Busca empresas en directorios públicos, extrae sus datos de contacto y los exporta a Excel o CSV. Incluye modo de enriquecimiento para rellenar automáticamente los huecos en ficheros existentes.
 
@@ -52,6 +52,7 @@ requests>=2.31.0
 beautifulsoup4>=4.12.3
 lxml>=5.1.0
 openpyxl>=3.1.2
+duckduckgo-search>=6.0.0
 ```
 
 ---
@@ -155,10 +156,11 @@ Reformas Norte,,,
 #### Qué hace el agente por cada fila
 
 ```
-1. Si tiene web → visita la web y busca email y teléfono
-2. Si no encuentra en la portada → busca la página de contacto
-3. Si no tiene web → hace una búsqueda en DuckDuckGo para encontrarla
-4. Si sigue sin datos → la fila se guarda tal cual, sin inventar nada
+1. Comprueba si falta el **Email 1** o el **Teléfono 1**. Si ambos existen, se salta la empresa para ahorrar tiempo.
+2. Si tiene web → visita la web y busca emails y teléfonos (máximo 2 de cada).
+3. Si no encuentra en la portada → busca la página de contacto.
+4. Si no tiene web → hace una búsqueda usando `duckduckgo-search` simulando un usuario real para encontrar la web oficial o datos de contacto en directorios.
+5. Si sigue sin datos → la fila se guarda tal cual, sin inventar nada.
 ```
 
 #### Fichero de salida
@@ -395,11 +397,11 @@ Los campos `null` se guardan como cadena vacía en el CSV y como celda vacía en
 
 ## Limitaciones conocidas
 
-- **DuckDuckGo puede bloquear** la IP tras muchas búsquedas seguidas. Si el log muestra que no se encuentran fuentes, espera unos minutos o usa el campo de palabras clave para variar las queries.
+- **DuckDuckGo puede tardar**: Aunque en la versión 1.1 se usa la librería `ddgs` para evitar bloqueos antibots, procesar archivos masivos sin web (ej. 4.000 filas) puede demorar horas. Se recomienda segmentar los excels muy grandes.
+- **Optimizado para PYMES/SLs**: Las grandes corporaciones (ej. S.A.) suelen esconder sus datos en portales de ayuda o carecer de correos públicos generales, por lo que la tasa de éxito con ellas es más baja.
+- **Máximo 2 contactos**: Solo extrae un máximo de 2 emails y 2 teléfonos por empresa para evitar "alucinaciones" (como atrapar números de fax o registros mercantiles por error).
 - **Algunos directorios requieren JavaScript** para mostrar el listado de empresas. El scraper solo procesa HTML estático, por lo que esos directorios devuelven pocas o ninguna empresa.
 - **La calidad depende de los directorios públicos** disponibles en el momento de la búsqueda. Para sectores muy locales o nichos pequeños puede haber menos resultados.
-- **Solo extrae el primer email y teléfono** encontrado en la página. Si una empresa tiene varios, solo se guarda uno.
-- **El enriquecimiento es lento** por diseño — respeta delays entre peticiones. Un fichero de 50 empresas puede tardar entre 5 y 15 minutos.
 
 ---
 
@@ -412,7 +414,7 @@ Los campos `null` se guardan como cadena vacía en el CSV y como celda vacía en
 | Concurrencia | threading + Queue (SSE) |
 | Excel | openpyxl |
 | Frontend | HTML5 + CSS3 + JavaScript vanilla |
-| Fuente de búsqueda | DuckDuckGo HTML (sin API key) |
+| Fuente de búsqueda | duckduckgo-search (ddgs) sin bloqueos |
 
 ---
 
