@@ -421,6 +421,19 @@ SECTOR_QUERIES = {
     ],
 }
 
+SECTOR_KEYWORDS = {
+    "Tecnología": ["tecnología", "software", "informática", "desarrollo", "web", "app", "it ", "digital", "tecnológico", "programación", "sistemas"],
+    "Marketing": ["marketing", "publicidad", "seo", "sem", "agencia", "comunicación", "digital", "branding", "diseño"],
+    "Diseño": ["diseño", "gráfico", "estudio", "creativo", "interiorismo", "arquitectura", "web", "ux", "ui"],
+    "Construcción": ["construcción", "reformas", "obras", "edificación", "arquitectura", "constructora", "promotora", "inmobiliaria", "instalaciones"],
+    "Salud": ["salud", "clínica", "médico", "hospital", "dental", "fisioterapia", "psicología", "medicina", "pacientes", "tratamiento", "estética"],
+    "Legal": ["legal", "abogados", "asesoría", "jurídico", "bufete", "derecho", "consultoría", "gestoría", "leyes"],
+    "Educación": ["educación", "formación", "academia", "colegio", "escuela", "cursos", "universidad", "profesores", "alumnos", "clases"],
+    "Restauración": ["restaurante", "hostelería", "bar", "cafetería", "comida", "gastronomía", "catering", "hotel", "alimentación", "menú"],
+    "Inmobiliaria": ["inmobiliaria", "propiedades", "pisos", "casas", "venta", "alquiler", "promotora", "inmuebles", "agencia"],
+    "Industria": ["industria", "fábrica", "fabricación", "industrial", "maquinaria", "producción", "ingeniería", "suministros", "materiales"],
+}
+
 @dataclass
 class Company:
     empresa: str
@@ -949,6 +962,13 @@ class ScraperAgent:
         soup = self._get(url, referer=source)
         if not soup or not _looks_like_company_page(soup, url):
             return
+            
+        if self.sector in SECTOR_KEYWORDS:
+            text = soup.get_text(separator=" ", strip=True).lower()
+            if not any(kw in text for kw in SECTOR_KEYWORDS[self.sector]):
+                log.debug(f"Descartado {url} por no coincidir con sector {self.sector}")
+                return
+                
         name = self._extract_name(soup, url)
         if not name or _is_blocked_name(name):
             return

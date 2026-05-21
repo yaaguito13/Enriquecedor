@@ -84,6 +84,9 @@ def start_scrape():
                 companies = get_demo_companies(sector)
 
                 for i, c in enumerate(companies):
+                    if session.get("stopped"):
+                        q.put({"type": "stopped", "message": "⏹ Demo detenida."})
+                        break
                     time.sleep(0.4)
                     session["companies"].append(asdict(c))
 
@@ -99,16 +102,17 @@ def start_scrape():
                         }
                     })
 
-                q.put({
-                    "type": "done",
-                    "message": "✅ Demo completada.",
-                    "stats": {
-                        "fuentes": len(companies),
-                        "empresas": len(companies),
-                        "emails": sum(1 for c in companies if c.email),
-                        "telefonos": sum(1 for c in companies if c.telefono)
-                    }
-                })
+                if not session.get("stopped"):
+                    q.put({
+                        "type": "done",
+                        "message": "✅ Demo completada.",
+                        "stats": {
+                            "fuentes": len(companies),
+                            "empresas": len(companies),
+                            "emails": sum(1 for c in companies if c.email),
+                            "telefonos": sum(1 for c in companies if c.telefono)
+                        }
+                    })
 
             else:
                 def cb(msg, **kw):
@@ -119,6 +123,8 @@ def start_scrape():
 
                 agent = ScraperAgent(sector, keywords, status_cb=cb)
                 session["agent"] = agent
+                if session.get("stopped"):
+                    agent.stop()
                 agent.run()
 
                 session["companies"] = [
@@ -168,6 +174,8 @@ def start_enrich():
 
             agent = EnricherAgent(status_cb=cb)
             session["agent"] = agent
+            if session.get("stopped"):
+                agent.stop()
             results = agent.run(file_path)
 
             session["companies"] = [
@@ -243,13 +251,13 @@ def stop_scrape(sid: str):
     if not session:
         return jsonify({"error": "Sesión no encontrada"}), 404
 
+    session["stopped"] = True
     agent = session.get("agent")
 
     if agent:
         agent.stop()
-        return jsonify({"ok": True})
-
-    return jsonify({"ok": False, "message": "Sin agente activo"}), 400
+        
+    return jsonify({"ok": True})
 
 
 # ───────────────────────────────
