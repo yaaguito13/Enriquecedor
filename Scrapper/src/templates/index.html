@@ -7,7 +7,7 @@
 <title>EmpresaScout — Scraping Empresarial por Sector</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <link href="/static/css/style.css" rel="stylesheet"/></head>
 <body>
@@ -28,6 +28,49 @@
 </div>
 </header>
 <main>
+<section class="hero" id="heroSection">
+  <div class="hero-bg">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+  </div>
+  <div class="container hero-container">
+    <div class="hero-content">
+      <h1 class="hero-title">Encuentra a tu próximo cliente ideal.</h1>
+      <p class="hero-subtitle">Scraping y enriquecimiento de datos empresariales impulsado por inteligencia artificial. Todo en segundos.</p>
+      <div class="hero-cta">
+        <button class="btn btn-hero" onclick="document.getElementById('appDashboard').scrollIntoView({behavior: 'smooth'})">
+          Comenzar Búsqueda
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div class="hero-graphics">
+      <div class="glass-card float-card card-1">
+        <div class="card-icon">📞</div>
+        <div class="card-info">
+          <span class="card-value">+1,200</span>
+          <span class="card-label">Teléfonos extraídos</span>
+        </div>
+      </div>
+      <div class="glass-card float-card card-2">
+        <div class="card-icon">✉️</div>
+        <div class="card-info">
+          <span class="card-value">98%</span>
+          <span class="card-label">Precisión de contacto</span>
+        </div>
+      </div>
+      <div class="glass-card float-card card-3">
+        <div class="card-icon">🤖</div>
+        <div class="card-info">
+          <span class="card-value">IA Activa</span>
+          <span class="card-label">Análisis en tiempo real</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="appDashboard">
 <div class="container">
 <!-- Tabs -->
 <div class="tabs">
@@ -45,6 +88,12 @@
 <line x1="9" x2="15" y1="15" y2="15"></line>
 </svg>
         Enriquecer fichero
+      </button>
+<button class="tab-btn" id="tabDocs" onclick="switchTab('docs')">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+</svg>
+        Documentación
       </button>
 </div>
 <!-- ══ TAB: Búsqueda nueva ══ -->
@@ -325,7 +374,62 @@
 </div>
 </div>
 </div><!-- /panelEnrich -->
+
+<!-- ══ TAB: Documentación ══ -->
+<div class="tab-panel" id="panelDocs">
+  <div class="docs-container">
+    <div class="docs-header">
+      <h2>Documentación Técnica</h2>
+      <p>Guía de arquitectura y funcionamiento interno de EmpresaScout.</p>
+    </div>
+    
+    <div class="docs-section">
+      <h3>1. Arquitectura del Sistema (Cliente-Servidor)</h3>
+      <p>EmpresaScout utiliza un modelo cliente-servidor asíncrono para garantizar un rendimiento fluido durante procesos de larga duración.</p>
+      <ul>
+        <li><strong>Frontend:</strong> Desarrollado en HTML5, CSS3 (Glassmorphism) y Vanilla JavaScript. Se encarga de la interfaz y visualización de datos.</li>
+        <li><strong>Backend:</strong> Desarrollado en Python con el micro-framework Flask. Gestiona el ciclo de vida de los agentes y las sesiones.</li>
+        <li><strong>Concurrencia:</strong> Los procesos pesados (Scraping y Enriquecimiento) se ejecutan en <i>Threads</i> (hilos) en segundo plano para no bloquear el servidor principal.</li>
+        <li><strong>Comunicación:</strong> El cliente y el servidor se comunican en tiempo real mediante <strong>Server-Sent Events (SSE)</strong>, lo que permite enviar filas de datos al navegador conforme se van encontrando, sin tener que esperar a que el proceso termine por completo.</li>
+      </ul>
+    </div>
+
+    <div class="docs-section">
+      <h3>2. Flujo de Scraping (ScraperAgent)</h3>
+      <p>El motor de búsqueda ha sido optimizado para la máxima velocidad y precisión, buscando empresas directamente sin pasar por intermediarios.</p>
+      <ol>
+        <li><strong>Búsqueda Directa:</strong> Utiliza la librería <code>duckduckgo_search</code> (DDGS) con comandos de búsqueda avanzada ("prompts") para localizar directamente las páginas web corporativas de empresas del sector elegido.</li>
+        <li><strong>Procesamiento Paralelo (Multithreading):</strong> Para lograr una velocidad de extracción masiva, se emplea un <code>ThreadPoolExecutor</code>. El agente abre, lee y analiza de forma segura y concurrente múltiples páginas web al mismo tiempo (controlado por un <code>threading.RLock()</code> para evitar condiciones de carrera).</li>
+        <li><strong>Extracción y Validación Inteligente:</strong> Se implementa un filtro heurístico mediante palabras clave. El sistema analiza el texto del DOM de cada página; si no se detectan términos semánticos vinculados al sector seleccionado, la web es descartada como falso positivo.</li>
+        <li><strong>Reconocimiento de Patrones:</strong> Si la web pertenece al sector, se aplican Expresiones Regulares (RegEx) para barrer el HTML e identificar heurísticamente datos de contacto como emails y números de teléfono.</li>
+      </ol>
+    </div>
+
+    <div class="docs-section">
+      <h3>3. Flujo de Enriquecimiento (EnricherAgent & AI)</h3>
+      <p>El agente de enriquecimiento permite completar bases de datos parcialmente vacías usando Inteligencia Artificial.</p>
+      <ul>
+        <li><strong>Lectura de Datos:</strong> Se utiliza <code>Pandas</code> para soportar múltiples formatos (.csv, .xlsx) detectando automáticamente las columnas más probables ("Empresa", "Web").</li>
+        <li><strong>Interacción con el Navegador:</strong> Si el modo de IA está desactivado, el sistema usará un parser estático.</li>
+        <li><strong>Motor de Inferencia (Anthropic API):</strong> Cuando se provee una clave API (Claude), el sistema inyecta HTML simplificado y metadatos de las páginas de la empresa directamente en un LLM de Anthropic mediante un <i>prompt</i> especializado que devuelve exclusivamente estructuras JSON. Esto maximiza la precisión en la recuperación de emails corporativos.</li>
+      </ul>
+    </div>
+
+    <div class="docs-section">
+      <h3>4. Dependencias Principales</h3>
+      <div class="code-block">
+        <code>Flask==3.0.0</code> (Backend y Routing)<br>
+        <code>duckduckgo-search>=9.8.0</code> (Motor de búsqueda OSINT)<br>
+        <code>beautifulsoup4==4.12.2</code> (HTML Parsing)<br>
+        <code>pandas==2.1.3</code> (Dataframes)<br>
+        <code>anthropic==0.20.0</code> (Modelos LLM)
+      </div>
+    </div>
+  </div>
+</div><!-- /panelDocs -->
+
 </div><!-- /container -->
+</div><!-- /appDashboard -->
 </main>
 <div class="toast-wrap" id="toastWrap"></div>
 

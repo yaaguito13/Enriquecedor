@@ -344,80 +344,69 @@ def _normalize_url(url: str) -> str:
 
 SECTOR_QUERIES = {
     "Tecnología": [
-        'directorio empresas tecnología software España',
-        'listado startups tecnológicas España contacto web',
-        'empresas desarrollo software España catálogo',
-        'agencias desarrollo web España email teléfono',
-        'proveedores IT tecnología España pymes',
+        'empresa desarrollo software España web contacto',
+        'startup tecnológica España contacto web',
+        'agencia desarrollo web España email teléfono',
+        'proveedor IT servicios informáticos España',
     ],
     "Marketing": [
-        'directorio agencias marketing digital España',
-        'listado agencias publicidad España contacto',
-        'agencias marketing online España catálogo web',
-        'empresas branding comunicación España pymes',
-        'agencias SEO SEM España web contacto',
+        'agencia marketing digital España contacto web',
+        'agencia publicidad España email teléfono',
+        'agencia SEO SEM España contacto',
+        'estudio branding comunicación España web',
     ],
     "Diseño": [
-        'directorio estudios diseño gráfico España',
-        'listado agencias diseño web España contacto',
-        'estudios diseño industrial España catálogo',
-        'empresas diseño UX UI España pymes web',
-        'estudios creativos diseño España teléfono email',
+        'estudio diseño gráfico España contacto web',
+        'agencia diseño web UI UX España email',
+        'estudio creativo diseño España contacto',
+        'agencia diseño interiorismo arquitectura España',
     ],
     "Construcción": [
-        'directorio constructoras España web contacto',
-        'listado empresas construcción reformas España email',
-        'constructoras obra civil España catálogo empresas',
-        'empresas reformas construcción España pymes',
-        'promotoras constructoras España web teléfono',
+        'empresa constructora España web contacto',
+        'empresa reformas obras edificación España email',
+        'constructora obra civil España teléfono',
+        'promotora inmobiliaria constructora España contacto',
     ],
     "Salud": [
-        'directorio clínicas privadas España contacto web',
-        'listado centros médicos privados España email',
-        'clínicas hospitales privados España teléfono web',
-        'empresas servicios médicos España catálogo pymes',
-        'centros salud privados España directorio',
+        'clínica privada España contacto web',
+        'centro médico privado España email teléfono',
+        'clínica dental fisioterapia España web',
+        'centro salud privado España contacto',
     ],
     "Legal": [
-        'directorio despachos abogados España web',
-        'listado bufetes jurídicos España contacto email',
-        'asesorías jurídicas España catálogo empresas web',
-        'despachos abogados España teléfono contacto',
-        'firmas legales abogados España pymes directorio',
+        'despacho abogados España web contacto',
+        'bufete abogados jurídico España email',
+        'asesoría jurídica España contacto teléfono',
+        'firma legal abogados España web',
     ],
     "Educación": [
-        'directorio academias formación España web',
-        'listado centros educativos privados España contacto',
-        'academias formación profesional España email teléfono',
-        'empresas elearning formación España catálogo',
-        'colegios privados academias España directorio',
+        'academia formación España web contacto',
+        'centro educativo privado España email',
+        'colegio privado escuela España teléfono',
+        'empresa formación cursos online España web',
     ],
     "Restauración": [
-        'directorio restaurantes España web contacto',
-        'listado cadenas restauración España web oficial',
-        'empresas hostelería restauración España catálogo',
-        'franquicias restauración España directorio email',
-        'grupos restauración hostelería España teléfono',
+        'restaurante España web contacto',
+        'cadena restauración hostelería España email',
+        'empresa catering España contacto teléfono',
+        'grupo restauración España web',
     ],
     "Inmobiliaria": [
-        'directorio agencias inmobiliarias España web',
-        'listado inmobiliarias España contacto email',
-        'promotoras inmobiliarias España catálogo empresas',
-        'agencias propiedades España directorio pymes',
-        'gestoras inmobiliarias España web teléfono',
+        'agencia inmobiliaria España web contacto',
+        'promotora inmobiliaria España email teléfono',
+        'gestoría inmobiliaria España contacto',
+        'agencia propiedades España web',
     ],
     "Industria": [
-        'directorio fabricantes industriales España web',
-        'listado empresas manufactura industria España contacto',
-        'fabricantes sector industrial España catálogo',
-        'proveedores industriales España directorio',
-        'empresas industria España email teléfono web',
+        'empresa fabricante industrial España web contacto',
+        'empresa manufactura industria España email',
+        'fábrica producción industrial España teléfono',
+        'proveedor industrial maquinaria España web',
     ],
     "Otros": [
-        'directorio empresas servicios España web',
-        'listado pymes España directorio contacto email',
-        'catálogo empresas servicios profesionales España',
-        'empresas servicios España web teléfono',
+        'empresa servicios profesionales España web contacto',
+        'pyme España email teléfono',
+        'empresa consultoría España web contacto',
     ],
 }
 
@@ -597,6 +586,7 @@ class ScraperAgent:
         self.sources_visited: set[str] = set()
         self.errors: list[str] = []
         self._stop_event = threading.Event()
+        self._lock = threading.RLock()
 
     def stop(self):
         self._stop_event.set()
@@ -609,9 +599,11 @@ class ScraperAgent:
 
     @property
     def stats(self) -> dict:
-        c = list(self.companies.values())
+        with self._lock:
+            c = list(self.companies.values())
+            sv_len = len(self.sources_visited)
         return {
-            "fuentes": len(self.sources_visited),
+            "fuentes": sv_len,
             "empresas": len(c),
             "emails": sum(1 for x in c if x.email),
             "telefonos": sum(1 for x in c if x.telefono),
@@ -708,7 +700,7 @@ class ScraperAgent:
         urls = []
         try:
             with DDGS() as ddgs:
-                results = ddgs.text(full_query, region="es-es", max_results=10)
+                results = ddgs.text(full_query, region="es-es", max_results=30)
                 for r in results:
                     href = r.get("href", "")
                     if href.startswith("http") and not _is_blocked_domain(href):
@@ -958,7 +950,10 @@ class ScraperAgent:
     def _process_company_url(self, url: str, source: str):
         if self._stopped() or url in self.sources_visited or _is_blocked_domain(url):
             return
-        self.sources_visited.add(url)
+        with self._lock:
+            if url in self.sources_visited:
+                return
+            self.sources_visited.add(url)
         soup = self._get(url, referer=source)
         if not soup or not _looks_like_company_page(soup, url):
             return
@@ -980,14 +975,19 @@ class ScraperAgent:
         # Si faltan datos, seguir a página de contacto
         if not emails or not phones:
             cu = self._find_contact_url(url, soup)
-            if cu and cu not in self.sources_visited:
-                self.sources_visited.add(cu)
-                cs = self._get(cu, referer=url)
-                if cs:
-                    if not emails:
-                        emails = self._extract_emails_from_soup(cs)
-                    if not phones:
-                        phones = self._extract_phones_from_soup(cs)
+            if cu:
+                with self._lock:
+                    if cu not in self.sources_visited:
+                        self.sources_visited.add(cu)
+                    else:
+                        cu = None
+                if cu:
+                    cs = self._get(cu, referer=url)
+                    if cs:
+                        if not emails:
+                            emails = self._extract_emails_from_soup(cs)
+                        if not phones:
+                            phones = self._extract_phones_from_soup(cs)
 
         company = Company(
             empresa=name, sector=self.sector, web=url,
@@ -995,79 +995,42 @@ class ScraperAgent:
             telefono=phones[0] if phones else None,
             fuente=source,
         )
-        key = company.key()
-        if key and key not in self.companies:
-            self.companies[key] = company
-            self._emit(f"✓ {name}", type="company", company=asdict(company), stats=self.stats)
-
-    def _get_company_links_from_directory(self, url: str) -> list[str]:
-        soup = self._get(url)
-        if not soup:
-            return []
-        source_domain = urlparse(url).netloc.lower()
-        seen_domains: set[str] = set()
-        links = []
-        bad_paths = ["/login","/logout","/signup","/register","/privacy",
-                     "/terms","/cookies","/help","?logout=","shareArticle","/share?"]
-        for a in soup.find_all("a", href=True):
-            href = a.get("href","").strip()
-            if not href or href.startswith("#") or href.startswith("mailto:"):
-                continue
-            full = urljoin(url, href)
-            parsed = urlparse(full)
-            if parsed.scheme not in ("http","https") or not parsed.netloc:
-                continue
-            d = parsed.netloc.lower()
-            if d == source_domain or _is_blocked_domain(full):
-                continue
-            path_q = parsed.path + "?" + (parsed.query or "")
-            if any(bp in path_q for bp in bad_paths):
-                continue
-            if d not in seen_domains:
-                seen_domains.add(d)
-                links.append(full)
-            if len(links) >= 20:
-                break
-        return links
+        with self._lock:
+            key = company.key()
+            if key and key not in self.companies:
+                self.companies[key] = company
+                self._emit(f"✓ {name}", type="company", company=asdict(company), stats=self.stats)
 
     def run(self):
         if self._stopped():
             return []
         queries = SECTOR_QUERIES.get(self.sector, SECTOR_QUERIES["Otros"])
 
-        self._emit("🔍 Buscando directorios en España…", type="status", phase="searching")
-        directory_urls: list[str] = []
+        self._emit("🔍 Buscando empresas en internet…", type="status", phase="searching")
+        company_urls: list[str] = []
         for query in queries:
             if self._stopped():
                 break
-            for url in self._search_urls(query)[:6]:
-                if url not in directory_urls:
-                    directory_urls.append(url)
-            self._emit(f"Directorios: {len(directory_urls)}", type="status",
+            for url in self._search_urls(query)[:15]:
+                if url not in company_urls:
+                    company_urls.append(url)
+            self._emit(f"Páginas encontradas: {len(company_urls)}", type="status",
                        phase="searching", stats=self.stats)
 
-        self._emit("🏢 Extrayendo empresas…", type="status", phase="extracting")
-        for dir_url in directory_urls:
+        self._emit("🏢 Analizando webs y extrayendo datos…", type="status", phase="extracting")
+        
+        from concurrent.futures import ThreadPoolExecutor
+        
+        def process_url(url):
             if self._stopped():
-                break
-            self._emit(f"📂 {urlparse(dir_url).netloc}", type="status",
-                       phase="extracting", stats=self.stats)
-            for link in self._get_company_links_from_directory(dir_url):
-                if self._stopped():
-                    break
-                self._process_company_url(link, source=dir_url)
+                return
+            self._process_company_url(url, source="Buscador")
 
-        if not self._stopped():
-            self._emit("📞 Enriqueciendo contactos…", type="status", phase="enriching")
-            for company in [c for c in self.companies.values()
-                            if not c.email and not c.telefono and c.web][:8]:
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            for url in company_urls:
                 if self._stopped():
                     break
-                soup = self._get(company.web)
-                if soup:
-                    cu = self._find_contact_url(company.web, soup)
-                    if cu:
-                        self._process_company_url(cu, source=company.web)
+                executor.submit(process_url, url)
 
         msg = "⏹ Detenido." if self._stopped() else "✅ Completado."
         ev_type = "stopped" if self._stopped() else "done"
