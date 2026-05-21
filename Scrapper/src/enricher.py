@@ -103,10 +103,7 @@ class EnrichedRow:
     telefono_nuevo: bool = False
 
     def needs_enrichment(self) -> bool:
-        return (
-            _is_empty(self.email) or _is_empty(self.telefono) or
-            _is_empty(self.email2) or _is_empty(self.telefono2)
-        )
+        return _is_empty(self.email) or _is_empty(self.telefono)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -619,8 +616,8 @@ class EnricherAgent:
 
             email_fields = ["email", "email2"]
             phone_fields = ["telefono", "telefono2"]
-            need_email = any(_is_empty(getattr(row, f)) for f in email_fields)
-            need_phone = any(_is_empty(getattr(row, f)) for f in phone_fields)
+            need_email = _is_empty(row.email)
+            need_phone = _is_empty(row.telefono)
             self._emit(
                 f"🔎 [{i+1}/{total}] {row.empresa} "
                 f"({'email+tel' if need_email and need_phone else 'email' if need_email else 'tel'})",
