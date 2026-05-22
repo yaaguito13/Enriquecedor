@@ -1,17 +1,30 @@
 """app.py — Backend Flask: scraping + enriquecimiento de ficheros"""
 
-import os, json, threading, uuid
+import os, sys, json, threading, uuid
 from queue import Queue, Empty
 from dataclasses import asdict
 
 from flask import Flask, render_template, request, jsonify, Response, send_file
 from scraper import ScraperAgent, export_results, get_demo_companies, SECTOR_QUERIES
 
-app = Flask(__name__)
+# ── PyInstaller MEIPASS Support ──
+if getattr(sys, 'frozen', False):
+    # Running in a PyInstaller bundle
+    base_dir = sys._MEIPASS
+    exec_dir = os.path.dirname(sys.executable)
+else:
+    # Running in normal Python environment
+    base_dir = os.path.dirname(__file__)
+    exec_dir = base_dir
+
+app = Flask(__name__,
+            template_folder=os.path.join(base_dir, 'templates'),
+            static_folder=os.path.join(base_dir, 'static'))
+
 app.secret_key = os.urandom(24)
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+OUTPUT_DIR = os.path.join(exec_dir, "output")
+UPLOAD_DIR = os.path.join(exec_dir, "uploads")
 ALLOWED_EXT = {".csv", ".xlsx", ".xls", ".xlsm", ".tsv"}
 
 sessions: dict[str, dict] = {}
@@ -346,10 +359,19 @@ def export(sid: str, fmt: str):
 # ───────────────────────────────
 # MAIN
 # ───────────────────────────────
+def open_browser():
+    import webbrowser
+    webbrowser.open_new("http://127.0.0.1:5001")
+
 if __name__ == "__main__":
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
     print("\n🚀  EmpresaScout  →  http://localhost:5001\n")
 
-    app.run(debug=True, threaded=True, port=5001)
+    # Si está congelado en PyInstaller, abrir el navegador automáticamente
+    if getattr(sys, 'frozen', False):
+        threading.Timer(1.5, open_browser).start()
+        app.run(debug=False, threaded=True, port=5001)
+    else:
+        app.run(debug=True, threaded=True, port=5001)
