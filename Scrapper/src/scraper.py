@@ -693,7 +693,7 @@ class ScraperAgent:
         return None  # Agotados los reintentos
 
     def _search_urls(self, query: str) -> list[str]:
-        from ddgs import DDGS
+        from duckduckgo_search import DDGS
         full_query = f"{query} España"
         if self.keywords:
             full_query += f" {self.keywords}"
