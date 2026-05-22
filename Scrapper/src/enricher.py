@@ -359,7 +359,7 @@ class EnricherAgent:
     def _search_contact_info(self, name: str, municipio: str = "",
                               provincia: str = "", web: str = "") -> tuple[list, list]:
         """Busca contacto en DuckDuckGo usando nombre + ubicación."""
-        from ddgs import DDGS
+        from duckduckgo_search import DDGS
         emails, phones = [], []
         location = f"{municipio} {provincia}".strip()
         queries = [
@@ -396,7 +396,7 @@ class EnricherAgent:
 
     def _find_web(self, name: str, municipio: str = "", seccion: str = "") -> Optional[str]:
         """Busca la web oficial de la empresa en DuckDuckGo."""
-        from ddgs import DDGS
+        from duckduckgo_search import DDGS
         extra = " ".join(filter(None, [municipio, seccion]))
         q = f'"{name}" {extra} web oficial site:.es OR site:.com'
         try:
@@ -454,7 +454,7 @@ class EnricherAgent:
         emails, phones = [], []
 
         # ── 1. Búsqueda DuckDuckGo por CIF (snippets) ──────────────
-        from ddgs import DDGS
+        from duckduckgo_search import DDGS
         for query in [
             f'"{cif}" teléfono contacto empresa',
             f'"{cif}" correo email empresa',
