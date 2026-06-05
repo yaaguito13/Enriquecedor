@@ -9,7 +9,7 @@ pip install pyinstaller flask requests beautifulsoup4 lxml openpyxl duckduckgo-s
 echo.
 echo Construyendo EmpresaScout.exe...
 cd src
-pyinstaller --noconfirm --onedir --windowed --icon="logo.ico" --add-data "templates;templates/" --add-data "static;static/" --name "EmpresaScout" app.py
+pyinstaller --noconfirm --onefile --windowed --icon="logo.ico" --add-data "templates;templates/" --add-data "static;static/" --name "EmpresaScout" app.py
 
 echo.
 echo ========================================================
